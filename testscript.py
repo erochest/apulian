@@ -7,7 +7,7 @@ import datetime
 import sqlite3
 
 import sqlalchemy
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Table
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 
@@ -84,6 +84,12 @@ class Image(Base):
     vase = relationship('Vase', back_populates='images')
 
 
+side_theme = Table('side_theme', Base.metadata,
+    Column('side_id', ForeignKey('sides.id'), primary_key=True),
+    Column('theme_id', ForeignKey('themes.id'), primary_key=True),
+)
+
+
 class Side(Base):
     __tablename__ = 'sides'
 
@@ -93,6 +99,42 @@ class Side(Base):
 
     vase_id = Column(Integer, ForeignKey('vases.id'))
     vase = relationship('Vase', back_populates='sides')
+
+    themes = relationship(
+        'Theme',
+        secondary=side_theme,
+        back_populates='sides',
+    )
+    figures = relationship('Figure', back_populates='side')
+
+
+class Theme(Base):
+    __tablename__ = 'themes'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(20))
+
+    sides = relationship(
+        'Side',
+        secondary=side_theme,
+        back_populates='themes',
+    )
+
+    def __repr__(self):
+        return '<Theme id={} name={}>'.format(
+            self.id, self.name,
+        )
+
+
+class Figure(Base):
+    __tablename__ = 'figures'
+
+    id = Column(Integer, primary_key=True)
+    figure_type = Column(String(5))
+    figure_count = Column(Integer, default=1)
+
+    side_id = Column(Integer, ForeignKey('sides.id'))
+    side = relationship('Side', back_populates='figures')
 
 
 def main():
@@ -128,6 +170,21 @@ def main():
 
     for p in session.query(Painter).all():
         print(p)
+
+    side = Side(identifier='a', composition='poor')
+    music = Theme(name='music')
+    pirates = Theme(name='pirates')
+
+    session.add(side)
+    session.add(music)
+    session.add(pirates)
+
+    side.themes += [music, pirates]
+
+    session.commit()
+
+    for theme in side.themes:
+        print(theme)
 
 
 if __name__ == '__main__':
