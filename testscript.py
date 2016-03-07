@@ -28,6 +28,8 @@ class Vase(Base):
     produced_start = Column(String)
     produced_end = Column(String)
 
+    # A.1. This is a many-to-one relationship, each vase has one painter, each
+    # painter possibly many vases.
     painter_id = Column(Integer, ForeignKey('painters.id'))
     painter = relationship('Painter', back_populates='vases')
 
@@ -38,6 +40,8 @@ class Vase(Base):
     trendall_ch = Column(Integer)
     trendall_no = Column(String)
 
+    # B.1. Another many-to-one relationship, this time going the other
+    # direction. Each vase has multiple sides, each side has only one vase.
     sides = relationship('Side', back_populates='vase')
     images = relationship('Image', back_populates='vase')
 
@@ -53,6 +57,10 @@ class Painter(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(40))
 
+    # A.2. This is the flip-side of the painter_id and painter properties
+    # in Vase. There's no actual column for this in the database,
+    # but this allows us to access the vases through this property
+    # in the object.
     vases = relationship('Vase', back_populates='painter')
 
     def __repr__(self):
@@ -84,6 +92,10 @@ class Image(Base):
     vase = relationship('Vase', back_populates='images')
 
 
+# C.1. Many-to-many relationship works through this table. Each theme can
+# apply to multiple sides, and each side can have multiple themes represented.
+# In the database, the relationship only exists in this table, not in the
+# tables it references.
 side_theme = Table('side_theme', Base.metadata,
     Column('side_id', ForeignKey('sides.id'), primary_key=True),
     Column('theme_id', ForeignKey('themes.id'), primary_key=True),
@@ -97,9 +109,11 @@ class Side(Base):
     identifier = Column(String(10))
     composition = Column(String(10))
 
+    # B.2. This is the flip side of Vase.sides.
     vase_id = Column(Integer, ForeignKey('vases.id'))
     vase = relationship('Vase', back_populates='sides')
 
+    # C.2. This is one end of the many-to-many relationship.
     themes = relationship(
         'Theme',
         secondary=side_theme,
@@ -114,6 +128,7 @@ class Theme(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(20))
 
+    # C.3. This is the other end of the many-to-many relationship.
     sides = relationship(
         'Side',
         secondary=side_theme,
