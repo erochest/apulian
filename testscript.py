@@ -101,6 +101,11 @@ side_theme = Table('side_theme', Base.metadata,
     Column('theme_id', ForeignKey('themes.id'), primary_key=True),
 )
 
+side_musical_theme = Table('side_musical_theme', Base.metadata,
+    Column('side_id', ForeignKey('sides.id'), primary_key=True),
+    Column('theme_id', ForeignKey('musical_themes.id'), primary_key=True),
+)
+
 
 class Side(Base):
     __tablename__ = 'sides'
@@ -121,6 +126,16 @@ class Side(Base):
     )
     figures = relationship('Figure', back_populates='side')
 
+    musical_themes = relationship(
+        'MusicalTheme',
+        secondary=side_musical_theme,
+        back_populates='sides',
+    )
+    instruments = relationship(
+        'InstrumentInstance',
+        back_populates='side',
+    )
+
 
 class Theme(Base):
     __tablename__ = 'themes'
@@ -139,6 +154,68 @@ class Theme(Base):
         return '<Theme id={} name={}>'.format(
             self.id, self.name,
         )
+
+
+musical_theme_instrument = Table(
+    'musical_theme_instrument', Base.metadata,
+    Column('musical_theme_id', ForeignKey('musical_themes.id'), primary_key=True),
+    Column('instrument_id', ForeignKey('instruments.id'), primary_key=True),
+)
+
+
+class MusicalTheme(Base):
+    __tablename__ = 'musical_themes'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(20))
+
+    sides = relationship(
+        'Side',
+        secondary=side_musical_theme,
+        back_populates='musical_themes',
+    )
+    instrument_types = relationship(
+        'Instrument',
+        secondary=musical_theme_instrument,
+        back_populates='themes',
+    )
+    instrument_instances = relationship(
+        'InstrumentInstance',
+        back_populates='theme'
+    )
+
+
+class Instrument(Base):
+    __tablename__ = 'instruments'
+
+    id = Column(Integer, primary_key=True)
+    name = Column(String(20))
+
+    themes = relationship(
+        'MusicalTheme',
+        secondary=musical_theme_instrument,
+        back_populates='instrument_types',
+    )
+    instances = relationship('InstrumentInstance', back_populates='instrument')
+
+
+class InstrumentInstance(Base):
+    __tablename__ = 'instrument_instances'
+
+    id = Column(Integer, primary_key=True)
+
+    performer = Column(String(15))
+    location = Column(String(10))
+    action = Column(String(20))
+
+    side_id = Column(Integer, ForeignKey('sides.id'))
+    side = relationship('Side', back_populates='instruments')
+
+    instrument_id = Column(Integer, ForeignKey('instruments.id'))
+    instrument = relationship('Instrument', back_populates='instances')
+
+    theme_id = Column(Integer, ForeignKey('musical_themes.id'))
+    theme = relationship('MusicalTheme', back_populates='instrument_instances')
 
 
 class Figure(Base):
