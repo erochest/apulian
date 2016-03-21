@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 
 
-import random
-from faker import Faker
-import datetime
-import sqlite3
+import csv
 
 import sqlalchemy
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Table
+from sqlalchemy import Column, Integer, String, ForeignKey, Table
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 
@@ -97,14 +94,15 @@ class Image(Base):
 # In the database, the relationship only exists in this table, not in the
 # tables it references.
 side_theme = Table('side_theme', Base.metadata,
-    Column('side_id', ForeignKey('sides.id'), primary_key=True),
-    Column('theme_id', ForeignKey('themes.id'), primary_key=True),
-)
+                   Column('side_id', ForeignKey('sides.id'), primary_key=True),
+                   Column('theme_id', ForeignKey('themes.id'),
+                          primary_key=True))
 
 side_musical_theme = Table('side_musical_theme', Base.metadata,
-    Column('side_id', ForeignKey('sides.id'), primary_key=True),
-    Column('theme_id', ForeignKey('musical_themes.id'), primary_key=True),
-)
+                           Column('side_id', ForeignKey('sides.id'),
+                                  primary_key=True),
+                           Column('theme_id', ForeignKey('musical_themes.id'),
+                                  primary_key=True))
 
 
 class Side(Base):
@@ -158,7 +156,8 @@ class Theme(Base):
 
 musical_theme_instrument = Table(
     'musical_theme_instrument', Base.metadata,
-    Column('musical_theme_id', ForeignKey('musical_themes.id'), primary_key=True),
+    Column('musical_theme_id', ForeignKey('musical_themes.id'),
+           primary_key=True),
     Column('instrument_id', ForeignKey('instruments.id'), primary_key=True),
 )
 
