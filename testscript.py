@@ -29,6 +29,8 @@ def take_digits(input):
     (1, 'abc')
     >>> take_digits('42xyz')
     (42, 'xyz')
+    >>> take_digits('13')
+    (13, '')
 
     """
 
@@ -41,6 +43,8 @@ def take_digits(input):
         else:
             rest = input[i:]
             break
+    else:
+        rest = ''
 
     if not accum:
         n = None
@@ -331,7 +335,7 @@ class RowAdapter:
         side_data = self._get_side_data(row, side_id)
 
         side = Side(
-            identifier=None,
+            identifier=side_id,
             composition=side_data['composition'],
             details=side_data['details'],
             catalogue=side_data['catalogue_description'],
