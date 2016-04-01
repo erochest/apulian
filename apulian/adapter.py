@@ -103,6 +103,9 @@ class RowAdapter:
         return sorted(numbers)
 
     def _adapt_side(self, side_id, row, objects, trendall_id):
+        # TODO: how are sides verified? under what conditions is a side not
+        # created? if there are no instrument instances?
+
         side_data = self._get_side_data(row, side_id)
 
         side = Side(

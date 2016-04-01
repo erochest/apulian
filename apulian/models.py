@@ -3,6 +3,19 @@
 Data models
 """
 
+__all__ = [
+    'bootstrap',
+    'Vase',
+    'Painter',
+    'Location',
+    'Image',
+    'Side',
+    'Theme',
+    'Instrument',
+    'InstrumentInstance',
+    'Figure',
+    ]
+
 
 import sqlalchemy
 from sqlalchemy import Column, Integer, String, ForeignKey, Table
@@ -73,6 +86,11 @@ class Location(Base):
     collection_id = Column(String(20), nullable=True)
 
     vases = relationship('Vase', back_populates='location')
+
+    def __repr__(self):
+        return '<Location id={}, city={}, collection={}>'.format(
+            self.id, self.city_name, self.collection_name,
+            )
 
 
 class Image(Base):
