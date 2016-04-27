@@ -10,11 +10,15 @@ database.
 import argparse
 import sys
 
-from apulian.models import bootstrap
+from apulian.models import bootstrap, Vase
 from populate import DB_NAME
 
 
 N = 10
+
+
+def jstor(query_str, n):
+    """Takes a query string and returns up to n results from dfr.jstor.org. """
 
 
 def make_searches(vase):
@@ -56,6 +60,10 @@ def main():
         'sqlite:///{}'.format(DB_NAME),
         )
     session = make_session()
+
+    for vase in session.query(Vase).order_by(Vase.produced_start):
+        for query_str in make_searches(vase):
+            pass
 
 
 if __name__ == '__main__':
