@@ -4,6 +4,8 @@ This adapter the input of the CSV file into the data model.
 """
 
 
+from collections import defaultdict
+
 from apulian.models import Vase, Painter, Location, Image, Side, Theme, \
         Instrument, InstrumentInstance, Figure
 from apulian.utils import take_digits
@@ -133,38 +135,45 @@ class RowAdapter:
             )
 
         inst_info = list(zip(
-            side_data['musical_scene_type'],
             side_data['performers'],
             side_data['performer_location'],
             side_data['performer_action'],
             ))
-        for (ms, p, pl, pa) in inst_info:
-            if ms[0] and ms[1] and ms[1] == p[1] == pl[1] == pa[1]:
+
+        mss = defaultdict(list)
+        for ms in side_data['musical_scene_type']:
+            if ms[0] in self.themes:
+                mss[ms[1]].append(self.themes[ms[0]])
+
+        for (p, pl, pa) in inst_info:
+            if p[1] in mss and p[1] == pl[1] == pa[1]:
+                # TODO: performer, location, and action can be NULL. '?' should
+                # be read as NULL. See 1.99 A.
                 inst_inst = InstrumentInstance(
                     performer=p[0],
                     location=pl[0],
                     action=pa[0],
                     side=side,
-                    theme=self.themes[ms[0]],
+                    themes=mss[p[1]],
                     instrument=self.instruments[ms[1]],
                     )
                 objects.append(inst_inst)
-            elif not (ms[1] == p[1] == pl[1] == pa[1]):
+            elif p[1] and not (p[1] in mss and p[1] == pl[1] == pa[1]):
                 print("WARNING [{}, {}]: different instruments: "
-                      "{} != {} != {} != {}\n\t{}".format(
+                      "{} != {} != {}\n\t{}".format(
                           trendall_id, side_id,
-                          ms, p, pl, pa, inst_info,
+                          p, pl, pa, inst_info,
                           ))
             elif p[0]:
                 print("WARNING [{}, {}]: missing musical scene type."
                       .format(trendall_id, side_id))
-            elif not (ms[0] or ms[1]):
+            elif p[1] not in mss:
                 continue
             else:
                 print("WARNING [{}, {}]: indeterminate error: "
-                      "{} != {} != {} != {}\n\t{}".format(
+                      "{} != {} != {}\n\t{}".format(
                           trendall_id, side_id,
-                          ms, p, pl, pa, inst_info,
+                          p, pl, pa, inst_info,
                           ))
 
         # figures
@@ -225,19 +234,30 @@ class RowAdapter:
         [('PROCESSION', None)]
         >>> adapter._parse_scene_type('PROCESSION(AU)', True)
         [('PROCESSION', 'AU')]
-        >>> adapter._parse_scene_type(\
+        >>> for scene_type in adapter._parse_scene_type(\
                 'ATTENDANT (DIONYSIAC)(TYM), ATTENDANT (DIONYSIAC)(CYM)',\
                 True,\
-                )
-        [('ATTENDANT', 'TYM'), ('DIONYSIAC', 'TYM'), ('ATTENDANT', 'CYM'), ('DIONYSIAC', 'CYM')]
+                ):
+        ...    print(scene_type)
+        ('ATTENDANT', 'TYM')
+        ('DIONYSIAC', 'TYM')
+        ('ATTENDANT', 'CYM')
+        ('DIONYSIAC', 'CYM')
+        >>> for scene_type in adapter._parse_scene_type(\
+                'C(AU)  R(TYM)', \
+                True,\
+                ):
+        ...     print(scene_type)
+        ('C', 'AU')
+        ('R', 'TYM')
 
         """
         names = []
         for s_type in scene_type.split(','):
             theme_names = [
-                    tname.strip(' ()')
-                    for tname in s_type.split('(')
-                    ]
+                tname.strip(' ()')
+                for tname in s_type.split('(')
+                ]
             if with_trailing:
                 trailing = theme_names.pop() if len(theme_names) > 1 else None
             else:

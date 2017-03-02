@@ -140,6 +140,14 @@ class Side(Base):
     )
 
 
+instance_theme = Table(
+    'instance_theme', Base.metadata,
+    Column('instrument_instance_id', ForeignKey('instrument_instances.id'), primary_key=True),
+    Column('theme_id', ForeignKey('themes.id'), primary_key=True),
+    )
+
+
+
 class Theme(Base):
     __tablename__ = 'themes'
 
@@ -155,7 +163,8 @@ class Theme(Base):
 
     instruments = relationship(
         'InstrumentInstance',
-        back_populates='theme'
+        secondary=instance_theme,
+        back_populates='themes'
     )
 
     def __repr__(self):
@@ -188,8 +197,11 @@ class InstrumentInstance(Base):
     side_id = Column(Integer, ForeignKey('sides.id'))
     side = relationship('Side', back_populates='instruments')
 
-    theme_id = Column(Integer, ForeignKey('themes.id'))
-    theme = relationship('Theme', back_populates='instruments')
+    themes = relationship(
+        'Theme',
+        secondary=instance_theme,
+        back_populates='instruments',
+    )
 
     instrument_id = Column(Integer, ForeignKey('instruments.id'))
     instrument = relationship('Instrument', back_populates='instances')
